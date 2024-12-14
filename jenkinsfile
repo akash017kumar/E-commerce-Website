@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_REGISTRY = 'akashnahak1/ecommerce-website'  // Simplified to remove redundant docker.io prefix
+        IMAGE_NAME = 'ecommerce-website'
+        SONAR_SERVER = 'http://99.79.77.85:9000'
+        SONAR_TOKEN = credentials('sonarqube')  // Add the SonarQube token in Jenkins Credentials
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout the Git repository
+                git branch: 'main', url: 'https://github.com/akash017kumar/E-commerce-Website.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image and tag it with 'latest'
+                    sh 'docker build -t ${DOCKER_REGISTRY}:latest .'
+                }
+            }
+        }
+
+        stage('Push Image to Registry') {
+            steps {
+                script {
+                    // Log in to Docker Hub using Jenkins credentials and push the image
+                    withDockerRegistry([credentialsId: 'docker-cred', url: 'https://index.docker.io/v1/']) {
+                        sh 'docker push ${DOCKER_REGISTRY}:latest'
+                    }
+                }
+            }
+        }
+    }
+}
